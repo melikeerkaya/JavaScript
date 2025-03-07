@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>JSON Parse Table</title>
+    <style>
+        table {
+            width: 50%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 18px;
+            text-align: left;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <table id="dataTable">
+        <thead>
+            <tr>
+                <th>X (Timestamp)</th>
+                <th>Y (Value)</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <script>
+        const jsonData = `{
+            "metric1": "market-price",
+            "metric2": "market-price",
+            "market-price": [
+                {"x": 1738800000000, "y": 96607.66},
+                {"x": 1738886400000, "y": 96564.45},
+                {"x": 1738972800000, "y": 96540.7},
+                {"x": 1739059200000, "y": 96486.54}
+            ],
+            "type": "linear",
+            "average": "1d",
+            "timespan": "30days"
+        }`;
+
+        // JSON verisini parse et
+        const myJSONObject = JSON.parse(jsonData);
+
+        // market-price dizisini al
+        const marketPrices = myJSONObject["market-price"];
+
+        // Tabloya veri ekleme
+        const tableBody = document.querySelector("#dataTable tbody");
+
+        marketPrices.forEach(item => {
+            let row = `<tr>
+                        <td>${item.x}</td>
+                        <td>${item.y}</td>
+                    </tr>`;
+            tableBody.innerHTML += row;
+        });
+    </script>
+</body>
+</html>

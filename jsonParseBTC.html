@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>JSON Parse Example</title>
+</head>
+<body>
+    <p id="demo"></p>
+    <script>
+        const jsonData = `{
+            "metric1": "market-price",
+            "metric2": "market-price",
+            "market-price": [
+                {"x": 1738800000000, "y": 96607.66},
+                {"x": 1738886400000, "y": 96564.45},
+                {"x": 1738972800000, "y": 96540.7},
+                {"x": 1739059200000, "y": 96486.54}
+            ],
+            "type": "linear",
+            "average": "1d",
+            "timespan": "30days"
+        }`;
+
+        // JSON verisini parse et
+        const myJSONObject = JSON.parse(jsonData);
+
+        // market-price dizisini al
+        const marketPrices = myJSONObject["market-price"];
+
+        let output = "";
+
+        // market-price dizisini döngü ile oku
+        for (let i = 0; i < marketPrices.length; i++) {
+            let x = marketPrices[i].x;
+            let y = marketPrices[i].y;
+            output += `x: ${x}, y: ${y} <br>`;
+        }
+
+        // Sonucu HTML'e yazdır
+        document.getElementById('demo').innerHTML = output;
+    </script>
+</body>
+</html>
