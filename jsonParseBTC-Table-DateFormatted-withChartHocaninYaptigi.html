@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTC Data Table & Chart</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 18px;
+            text-align: left;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        #chartdiv {
+            width: 100%;
+            height: 500px;
+        }
+    </style>
+    <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/themes/Responsive.js"></script>
+</head>
+<body>
+
+    <h2>BTC Market Price Data</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Price (USD)</th>
+            </tr>
+        </thead>
+        <tbody id="btcTableBody"></tbody>
+    </table>
+
+    <div id="chartdiv"></div>
+
+    <script>
+        const btcJSON = `{
+            "metric1": "market-price",
+            "metric2": "market-price",
+            "market-price": [
+                {"x": 1738800000000, "y": 96607.66},
+                {"x": 1738886400000, "y": 96564.45},
+                {"x": 1738972800000, "y": 96540.7},
+                {"x": 1739059200000, "y": 96486.54},
+                {"x": 1739145600000, "y": 96487.05},
+                {"x": 1739232000000, "y": 97461.49}
+            ],
+            "type": "linear",
+            "average": "1d",
+            "timespan": "30days"
+        }`;
+
+        // JSON'u parse et
+        const btcData = JSON.parse(btcJSON)["market-price"];
+
+        // Tabloya veri ekle
+        const tableBody = document.getElementById("btcTableBody");
+        btcData.forEach(item => {
+            const date = new Date(item.x).toISOString().split("T")[0]; // YYYY-MM-DD formatına çevir
+            const row = `<tr><td>${date}</td><td>${item.y.toFixed(2)}</td></tr>`;
+            tableBody.innerHTML += row;
+        });
+
+        // amCharts ile grafiği oluştur
+am5.ready(function() {
+    var root = am5.Root.new("chartdiv");
+
+    root.setThemes([
+        am5themes_Animated.new(root),
+        am5themes_Responsive.new(root)
+    ]);
+
+    var chart = root.container.children.push(am5xy.XYChart.new(root, {
+        panX: false,
+        panY: false,
+        wheelX: "panX",
+        wheelY: "zoomX"
+    }));
+
+    var xAxis = chart.xAxes.push(am5xy.DateAxis.new(root, {
+        baseInterval: { timeUnit: "day", count: 1 },
+        renderer: am5xy.AxisRendererX.new(root, {})
+    }));
+
+    var yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
+        renderer: am5xy.AxisRendererY.new(root, {}),
+        min: Math.min(...btcData.map(item => item.y)) - 10000,  // Min değeri biraz daha düşük yapmak için
+        max: Math.max(...btcData.map(item => item.y)) + 10000   // Max değeri biraz daha yüksek yapmak için
+    }));
+
+    var series = chart.series.push(am5xy.LineSeries.new(root, {
+        name: "BTC Price",
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: "value",
+        valueXField: "date",
+        tooltip: am5.Tooltip.new(root, { labelText: "{valueY}" })
+    }));
+
+    // JSON verisini amCharts formatına çevir
+    var chartData = btcData.map(item => ({
+        date: item.x,
+        value: item.y
+    }));
+
+    series.data.setAll(chartData);
+
+    chart.set("cursor", am5xy.XYCursor.new(root, {}));
+    series.appear(1000);
+    chart.appear(1000, 100);
+});
+
+    </script>
+
+</body>
+</html>

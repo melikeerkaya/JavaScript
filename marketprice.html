@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSON Verisi ile Piyasa Fiyat Tablosu ve Animasyonlu Grafiği</title>
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+      border: 1px solid #ddd;
+    }
+    canvas {
+      max-width: 100%;
+      height: 500px;
+    }
+    #chartdiv {
+      width: 100%;
+      height: 500px;
+    }
+  </style>
+
+  <!-- AmCharts Kütüphanesini Yükleyin -->
+  <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/themes/Responsive.js"></script>
+</head>
+<body>
+
+  <h1>30 Günlük Piyasa Fiyat Tablosu ve Animasyonlu Grafiği</h1>
+  
+  <table id="marketPriceTable">
+    <thead>
+      <tr>
+        <th>Tarih</th>
+        <th>Piyasa Fiyatı</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Satırlar JavaScript ile eklenecek -->
+    </tbody>
+  </table>
+
+  <!-- AmCharts Grafik -->
+  <div id="chartdiv"></div>
+
+  <script>
+    // JSON verisini string formatında alıyoruz
+    const jsonString = `{
+      "metric1": "market-price",
+      "metric2": "market-price",
+      "market-price": [
+        { "x": 1738800000000, "y": 96607.66 },
+        { "x": 1738886400000, "y": 96564.45 },
+        { "x": 1738972800000, "y": 96540.7 },
+        { "x": 1739059200000, "y": 96486.54 },
+        { "x": 1739145600000, "y": 96487.05 },
+        { "x": 1739232000000, "y": 97461.49 },
+        { "x": 1739318400000, "y": 95752 },
+        { "x": 1739404800000, "y": 97877.16 },
+        { "x": 1739491200000, "y": 96628.78 },
+        { "x": 1739577600000, "y": 97494.79 },
+        { "x": 1739664000000, "y": 97593.62 },
+        { "x": 1739750400000, "y": 96176.21 },
+        { "x": 1739836800000, "y": 95771.14 },
+        { "x": 1739923200000, "y": 95544 },
+        { "x": 1740009600000, "y": 96642.79 },
+        { "x": 1740096000000, "y": 98331 },
+        { "x": 1740182400000, "y": 96111.11 },
+        { "x": 1740268800000, "y": 96580.65 },
+        { "x": 1740355200000, "y": 96274.79 },
+        { "x": 1740441600000, "y": 91538.39 },
+        { "x": 1740528000000, "y": 88664.31 },
+        { "x": 1740614400000, "y": 84115.7 },
+        { "x": 1740700800000, "y": 84645.86 },
+        { "x": 1740787200000, "y": 84379.79 },
+        { "x": 1740873600000, "y": 86025.07 },
+        { "x": 1740960000000, "y": 94255.51 },
+        { "x": 1741046400000, "y": 86081.79 },
+        { "x": 1741132800000, "y": 87226.39 },
+        { "x": 1741219200000, "y": 90608.57 },
+        { "x": 1741305600000, "y": 89920.13 }
+      ],
+      "type": "linear",
+      "average": "1d",
+      "timespan": "30days"
+    }`;
+
+    // JSON verisini parse ile JavaScript objesine dönüştürüyoruz
+    const jsonData = JSON.parse(jsonString);
+
+    // Zamanı okunabilir formata dönüştürme fonksiyonu
+    function formatDate(timestamp) {
+      const date = new Date(timestamp);
+      const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false };
+      return date.toLocaleDateString('tr-TR', options);
+    }
+
+    // Tabloyu oluşturma fonksiyonu
+    function createTableFromJSON(data) {
+      const tableBody = document.querySelector("#marketPriceTable tbody");
+
+      // market-price dizisine for döngüsü ile erişiyoruz
+      for (let i = 0; i < data["market-price"].length; i++) {
+        const item = data["market-price"][i];
+        
+        // Satır (tr) oluşturuyoruz
+        const row = document.createElement("tr");
+
+        // Zamanı formatlayarak ekliyoruz
+        const dateCell = document.createElement("td");
+        dateCell.textContent = formatDate(item.x);
+        row.appendChild(dateCell);
+
+        // Piyasa fiyatını ekliyoruz
+        const priceCell = document.createElement("td");
+        priceCell.textContent = item.y.toFixed(2); // Fiyatı iki ondalıklı gösteriyoruz
+        row.appendChild(priceCell);
+
+        // Satırı tabloya ekliyoruz
+        tableBody.appendChild(row);
+      }
+    }
+
+    // Grafik için veriyi hazırlıyoruz
+    const labels = jsonData["market-price"].map(item => formatDate(item.x));  // Zaman (tarih) etiketlerini alıyoruz
+    const data = jsonData["market-price"].map(item => item.y);  // Piyasa fiyatlarını alıyoruz
+
+    // Tabloyu oluşturuyoruz
+    createTableFromJSON(jsonData);
+
+    // AmCharts için grafik kodu
+    am5.ready(function() {
+      var root = am5.Root.new("chartdiv");
+
+      const myTheme = am5.Theme.new(root);
+      myTheme.rule("AxisLabel", ["minor"]).setAll({ dy:1 });
+
+      root.setThemes([am5themes_Animated.new(root), myTheme, am5themes_Responsive.new(root)]);
+
+      var chart = root.container.children.push(am5xy.XYChart.new(root, {
+        panX: false,
+        panY: false,
+        wheelX: "panX",
+        wheelY: "zoomX",
+        paddingLeft: 0
+      }));
+
+      var cursor = chart.set("cursor", am5xy.XYCursor.new(root, { behavior: "zoomX" }));
+      cursor.lineY.set("visible", false);
+
+      var xAxis = chart.xAxes.push(am5xy.DateAxis.new(root, {
+        maxDeviation: 0,
+        baseInterval: { timeUnit: "day", count: 1 },
+        renderer: am5xy.AxisRendererX.new(root, { minorGridEnabled: true, minorLabelsEnabled: true }),
+        tooltip: am5.Tooltip.new(root, {})
+      }));
+
+      var yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
+        renderer: am5xy.AxisRendererY.new(root, {})
+      }));
+
+      var series = chart.series.push(am5xy.ColumnSeries.new(root, {
+        name: "Piyasa Fiyatı",
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: "value",
+        valueXField: "date",
+        tooltip: am5.Tooltip.new(root, { labelText: "{valueY}" })
+      }));
+
+      // Çubukların görünür olmasını sağlamak için fill ve stroke özelliklerini ayarlıyoruz
+      series.columns.template.setAll({
+        fill: am5.color(0x67b7dc),
+        stroke: am5.color(0x67b7dc),
+        strokeOpacity: 0.7
+      });
+
+      // Veriyi AmCharts formatında ekliyoruz
+      const chartData = jsonData["market-price"].map(item => {
+        return {
+          date: item.x,
+          value: item.y
+        };
+      });
+      
+      series.data.setAll(chartData);
+
+      // Yüklenirken animasyon ekliyoruz
+      series.appear(1000);
+      chart.appear(1000, 100);
+    });
+  </script>
+
+</body>
+</html>
